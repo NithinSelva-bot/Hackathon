@@ -1,53 +1,58 @@
-"""
-groq_ai.py — Groq LLM integration for HireFlip.
-
-Replace the stub implementations below with your real Groq API calls.
-Expected env variable: GROQ_API_KEY (loaded via python-dotenv in main.py)
-"""
-
 import os
+from groq import Groq
+import json
 
-# Example: from groq import Groq
-# client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def detect_bias(job_description: str) -> dict:
-    """
-    Sends the job description to Groq and returns a structured bias report.
+    prompt = f"""
+You are an expert HR bias detector. Analyze this job description for bias.
 
-    Returns:
-        {
-            "categories": {
-                "gender": ["he/she", "chairman"],
-                "age":     ["young and energetic"],
-                ...
-            },
-            "explanation": "The JD uses gendered language in ...",
-            "rewritten_jd": "We are looking for a motivated engineer ...",
-            "groq_score": 62          # optional raw score 0-100
-        }
-    """
-    # --- Replace with real Groq call ---
-    # prompt = f"Analyze the following job description for bias...\n\n{job_description}"
-    # response = client.chat.completions.create(
-    #     model="llama3-8b-8192",
-    #     messages=[{"role": "user", "content": prompt}],
-    # )
-    # ...parse and return structured dict...
+Job Description:
+{job_description}
 
-    raise NotImplementedError(
-        "detect_bias() is a stub. Implement your Groq API call here."
+Respond ONLY with a valid JSON object in this exact format:
+{{
+    "categories": {{
+        "gender": ["list of gendered words found"],
+        "age": ["list of age-biased words found"],
+        "race": ["list of racially biased words found"],
+        "disability": ["list of ableist words found"]
+    }},
+    "explanation": "A clear explanation of the bias found",
+    "rewritten_jd": "A fully rewritten unbiased version of the job description",
+    "groq_score": 50
+}}
+
+groq_score should be 0-100 where 100 means extremely biased, 0 means no bias.
+"""
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3,
     )
+    text = response.choices[0].message.content
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+    return json.loads(text.strip())
 
 
 def rewrite_jd(job_description: str) -> str:
-    """
-    Asks Groq to rewrite the job description in inclusive, bias-free language.
+    prompt = f"""
+Rewrite this job description to be completely unbiased, inclusive, and welcoming to all candidates.
+Remove any gendered, ageist, racist, or ableist language.
 
-    Returns:
-        A plain-text rewritten job description string.
-    """
-    # --- Replace with real Groq call ---
-    raise NotImplementedError(
-        "rewrite_jd() is a stub. Implement your Groq API call here."
+Job Description:
+{job_description}
+
+Return only the rewritten job description, nothing else.
+"""
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3,
     )
+    return response.choices[0].message.content.strip()
