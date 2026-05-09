@@ -30,7 +30,7 @@ Respond ONLY with a valid JSON object in this exact format:
 groq_score should be 0-100 where 100 means extremely biased, 0 means no bias.
 """
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
@@ -54,7 +54,7 @@ Job Description:
 Return only the rewritten job description, nothing else.
 """
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
     )
