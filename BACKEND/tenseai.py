@@ -33,27 +33,32 @@ ALL_BIAS_KEYWORDS: list[str] = (
 )
 
 
-def analyze_tone(job_description: str) -> str:
+def analyze_tone(text: str) -> str:
     """
-    Classifies the overall tone of the job description.
+    Mock implementation: Analyzes the tone of the given text using keyword matching.
 
-    Returns one of: "inclusive", "neutral", "exclusive", "aggressive"
+    Returns one of: "aggressive", "neutral", "welcoming"
 
-    Replace this with a real classifier (e.g. a fine-tuned model or
-    another Groq prompt) for production use.
+    This is a mock and does not call any real API. Later, replace with real TenseAI API call.
     """
-    jd_lower = job_description.lower()
+    text_lower = text.lower()
 
-    masculine_hits = sum(1 for w in _MASCULINE_CODED if w in jd_lower)
-    exclusionary_hits = sum(1 for w in _EXCLUSIONARY if w in jd_lower)
+    # Keywords for aggressive tone
+    aggressive_keywords = ["angry", "hate", "fight", "attack", "rage", "violent", "aggressive", "hostile"]
 
-    if masculine_hits >= 4 or exclusionary_hits >= 2:
+    # Keywords for welcoming tone
+    welcoming_keywords = ["welcome", "hello", "friendly", "kind", "warm", "inviting", "helpful", "supportive"]
+
+    # Check for aggressive
+    if any(kw in text_lower for kw in aggressive_keywords):
         return "aggressive"
-    if masculine_hits >= 2 or exclusionary_hits == 1:
-        return "exclusive"
-    if masculine_hits == 1:
-        return "neutral"
-    return "inclusive"
+
+    # Check for welcoming
+    if any(kw in text_lower for kw in welcoming_keywords):
+        return "welcoming"
+
+    # Default to neutral
+    return "neutral"
 
 
 def calculate_fairness_score(groq_score: int, tone: str) -> int:
