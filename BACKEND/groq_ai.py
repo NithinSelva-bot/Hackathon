@@ -5,7 +5,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise RuntimeError(
+        "GROQ_API_KEY is not configured. Set it in Render environment variables or in .env for local testing."
+    )
+
+client = Groq(api_key=GROQ_API_KEY)
+
+def _create_chat_completion(prompt: str):
+    try:
+        return client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+    except Exception as exc:
+        print(f"[groq_ai] Groq API request failed: {exc!r}")
+        raise RuntimeError(
+            "Failed to connect to Groq API. Check GROQ_API_KEY and network access."
+        ) from exc
 
 def detect_bias(job_description: str) -> dict:
     prompt = f"""
@@ -29,11 +48,7 @@ Respond ONLY with a valid JSON object in this exact format:
 
 groq_score should be 0-100 where 100 means extremely biased, 0 means no bias.
 """
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-    )
+    response = _create_chat_completion(prompt)
     text = response.choices[0].message.content
     text = text.strip()
     if text.startswith("```"):
@@ -53,9 +68,5 @@ Job Description:
 
 Return only the rewritten job description, nothing else.
 """
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-    )
+    response = _create_chat_completion(prompt)
     return response.choices[0].message.content.strip()
