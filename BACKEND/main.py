@@ -42,6 +42,7 @@ async def analyze(request: JobDescriptionRequest):
     try:
         bias_result = detect_bias(jd)
         tone = analyze_tone(jd)
+        rewritten_jd = rewrite_jd(jd)
         groq_score = bias_result.get("groq_score", 50)
         fairness_score = calculate_fairness_score(groq_score, tone)
         biased_words = get_bias_keywords(jd)
@@ -50,7 +51,7 @@ async def analyze(request: JobDescriptionRequest):
             "biased_words": biased_words,
             "categories": bias_result.get("categories", {}),
             "explanation": bias_result.get("explanation", ""),
-            "rewritten_jd": bias_result.get("rewritten_jd", ""),
+            "rewritten_jd": rewritten_jd,
             "tone": tone,
         }
     except Exception as exc:
